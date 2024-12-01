@@ -1,0 +1,60 @@
+use std::{fmt::Display, fs::File, io::Read, path::Path};
+
+mod day01;
+
+fn main() {
+    let args: Vec<_> = std::env::args().collect();
+    let day: i32 = args[1].parse().unwrap();
+    match day {
+        1 => run_puzzle((day01::day01part1, day01::day01part2), &args[2..]),
+        _ => panic!("no such day"),
+    }
+}
+
+trait AdventPuzzle: Sized {
+    fn run(self, input: &str) -> String;
+
+    fn run_from_file(self, mut file: impl Read) -> String {
+        let mut s = String::new();
+        file.read_to_string(&mut s).unwrap();
+        self.run(&s)
+    }
+
+    fn run_from_path(self, path: impl AsRef<Path>) -> String {
+        let file = File::open(path).unwrap();
+        self.run_from_file(file)
+    }
+
+    fn run_from_stdin(self) -> String {
+        let stdin = std::io::stdin();
+        self.run_from_file(stdin)
+    }
+}
+
+impl<F, R> AdventPuzzle for F
+where
+    F: FnOnce(&str) -> R,
+    R: Display
+{
+    fn run(self, input: &str) -> String {
+        self(input).to_string()
+    }
+}
+
+impl<P1, P2> AdventPuzzle for (P1, P2)
+where P1: AdventPuzzle, 
+P2:AdventPuzzle {
+    fn run(self, input: &str) -> String {
+        let (p1, p2) = self;
+        format!("{}\n{}", p1.run(input), p2.run(input))
+    }
+}
+
+fn run_puzzle(solution: impl AdventPuzzle, args: &[String]) {
+    let answer = if args.is_empty() || args[0] == "-" {
+        solution.run_from_stdin()
+    } else {
+        solution.run_from_path(&args[0])
+    };
+    println!("{}", &answer);
+}
