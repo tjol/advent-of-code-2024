@@ -1,12 +1,14 @@
 use std::{fmt::Display, fs::File, io::Read, path::Path};
 
 mod day01;
+mod day02;
 
 fn main() {
     let args: Vec<_> = std::env::args().collect();
     let day: i32 = args[1].parse().unwrap();
     match day {
         1 => run_puzzle((day01::day01part1, day01::day01part2), &args[2..]),
+        2 => run_puzzle((day02::day02part1, day02::day02part2), &args[2..]),
         _ => panic!("no such day"),
     }
 }
