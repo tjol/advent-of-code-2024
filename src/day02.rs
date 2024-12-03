@@ -109,6 +109,7 @@ mod test {
         assert!(valid2(&[1, 2, 3, 100, 4, 5], 1));
         assert!(!valid2(&[1, 2, 3, 100, 100, 4, 5], 1));
         assert!(valid2(&[1, 2, 3, 4, 5, 100], 1));
+        assert!(valid2(&[100, 1, 2, 3, 4, 5], 1));
         assert!(!valid2(&[100, 1, 2, 3, 4, 5, 100], 1));
         assert!(valid2(&[1, 3, 2, 3], 1));
         assert!(!valid2(&[1, 3, 2, 0], 1));
