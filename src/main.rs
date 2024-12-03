@@ -2,6 +2,7 @@ use std::{fmt::Display, fs::File, io::Read, path::Path};
 
 mod day01;
 mod day02;
+mod day03;
 
 fn main() {
     let args: Vec<_> = std::env::args().collect();
@@ -9,6 +10,7 @@ fn main() {
     match day {
         1 => run_puzzle((day01::day01part1, day01::day01part2), &args[2..]),
         2 => run_puzzle((day02::day02part1, day02::day02part2), &args[2..]),
+        3 => run_puzzle((day03::day03part1, day03::day03part2), &args[2..]),
         _ => panic!("no such day"),
     }
 }
