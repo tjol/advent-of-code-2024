@@ -12,10 +12,56 @@ pub fn day05part1(input: &str) -> i32 {
     let trial_lines = &remaining_lines[1..];
 
     let rules = parse_rules(rule_lines);
-    let page_lists: Vec<_> = trial_lines.into_iter().filter(|l| !l.is_empty()).map(|l| parse_pagelist(l)).collect();
-    let valid: Vec<_> = page_lists.iter().filter(|page_list| validate(page_list, &rules)).collect();
+    let page_lists: Vec<_> = trial_lines
+        .into_iter()
+        .filter(|l| !l.is_empty())
+        .map(|l| parse_pagelist(l))
+        .collect();
+    let valid: Vec<_> = page_lists
+        .iter()
+        .filter(|page_list| validate(page_list, &rules))
+        .collect();
 
-    let mid_sum = valid.iter().map(|page_list| page_list[page_list.len() / 2]).sum();
+    let mid_sum = valid
+        .iter()
+        .map(|page_list| page_list[page_list.len() / 2])
+        .sum();
+
+    mid_sum
+}
+
+pub fn day05part2(input: &str) -> i32 {
+    let lines: Vec<&str> = input.lines().map(str::trim).collect();
+    let blank_idx = lines
+        .iter()
+        .enumerate()
+        .filter_map(|(idx, line)| line.is_empty().then_some(idx))
+        .next()
+        .unwrap();
+    let (rule_lines, remaining_lines) = lines.split_at(blank_idx);
+    let trial_lines = &remaining_lines[1..];
+
+    let rules = parse_rules(rule_lines);
+    let page_lists: Vec<_> = trial_lines
+        .into_iter()
+        .filter(|l| !l.is_empty())
+        .map(|l| parse_pagelist(l))
+        .collect();
+
+    let mut invalid: Vec<_> = page_lists
+        .iter()
+        .filter(|page_list| !validate(page_list, &rules))
+        .cloned()
+        .collect();
+
+    for mut list in &mut invalid {
+        reorder_list(&mut list, &rules);
+    }
+
+    let mid_sum = invalid
+        .iter()
+        .map(|page_list| page_list[page_list.len() / 2])
+        .sum();
 
     mid_sum
 }
@@ -38,11 +84,36 @@ impl Rule {
     pub fn check_page_map(&self, page_map: &BTreeMap<i32, usize>) -> bool {
         let Self(p1, p2) = self;
         if let (Some(&i1), Some(&i2)) = (page_map.get(p1), page_map.get(p2)) {
-
             i1 < i2
         } else {
             true
         }
+    }
+
+    pub fn enforce(&self, page_list: &mut [i32]) -> bool {
+        let Self(p1, p2) = *self;
+        let mut p1_idx = None;
+        let mut p2_idx = None;
+        for (idx, &p) in page_list.iter().enumerate() {
+            if p == p1 {
+                if p2_idx.is_none() {
+                    return false;
+                } else {
+                    p1_idx = Some(idx);
+                    break;
+                }
+            } else if p == p2 {
+                // before p1
+                p2_idx = Some(idx);
+            }
+        }
+
+        if let (Some(i), Some(j)) = (p2_idx, p1_idx) {
+            page_list.copy_within((i + 1)..=j, i);
+            page_list[j] = p2;
+            return true;
+        }
+        false
     }
 }
 
@@ -68,6 +139,18 @@ fn make_page_map(page_list: &[i32]) -> BTreeMap<i32, usize> {
 fn validate(page_list: &[i32], rules: &[Rule]) -> bool {
     let page_map = make_page_map(page_list);
     rules.into_iter().all(|rule| rule.check_page_map(&page_map))
+}
+
+fn reorder_list(page_list: &mut [i32], rules: &[Rule]) {
+    loop {
+        let mut any_enforced = false;
+        for rule in rules {
+            any_enforced |= rule.enforce(page_list);
+        }
+        if !any_enforced {
+            break;
+        }
+    }
 }
 
 #[cfg(test)]
@@ -108,5 +191,10 @@ mod test {
     #[test]
     fn part1test() {
         assert_eq!(day05part1(TEST_INPUT), 143);
+    }
+
+    #[test]
+    fn part2test() {
+        assert_eq!(day05part2(TEST_INPUT), 123);
     }
 }
