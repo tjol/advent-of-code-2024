@@ -1,53 +1,74 @@
-pub fn day05part1(input: &str) -> usize {
-    let lines: Vec<&str> = input.lines().map(str::trim).collect();
-    let blank_idx = lines.iter().enumerate().filter_map(|(idx, line)| line.is_empty().then_some(idx)).next().unwrap();
-    let (order_lines, mut trial_lines) = lines.split_at(blank_idx);
-    trial_lines = &trial_lines[1..];
+use std::{collections::BTreeMap, str::FromStr};
 
-    let order = parse_order(order_lines);
+pub fn day05part1(input: &str) -> i32 {
+    let lines: Vec<&str> = input.lines().map(str::trim).collect();
+    let blank_idx = lines
+        .iter()
+        .enumerate()
+        .filter_map(|(idx, line)| line.is_empty().then_some(idx))
+        .next()
+        .unwrap();
+    let (rule_lines, remaining_lines) = lines.split_at(blank_idx);
+    let trial_lines = &remaining_lines[1..];
+
+    let rules = parse_rules(rule_lines);
+    let page_lists: Vec<_> = trial_lines.into_iter().filter(|l| !l.is_empty()).map(|l| parse_pagelist(l)).collect();
+    let valid: Vec<_> = page_lists.iter().filter(|page_list| validate(page_list, &rules)).collect();
+
+    let mid_sum = valid.iter().map(|page_list| page_list[page_list.len() / 2]).sum();
+
+    mid_sum
 }
 
-fn parse_order(lines: &[&str]) -> Vec<usize> {
-    let mut page_list = vec![];
-    for line in lines {
-        let (p1s, p2s) = line.split_once('|').unwrap();
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct Rule(i32, i32);
+
+impl FromStr for Rule {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let (p1s, p2s) = s.split_once('|').unwrap();
         let p1 = p1s.parse().unwrap();
         let p2 = p2s.parse().unwrap();
-
-        insert_pages(&mut page_list, p1, p2);
+        Ok(Self(p1, p2))
     }
 }
 
-enum InsertResult {
-    Ok,
-    Contradictory,
-    TryAgainLater,
-}
+impl Rule {
+    pub fn check_page_map(&self, page_map: &BTreeMap<i32, usize>) -> bool {
+        let Self(p1, p2) = self;
+        if let (Some(&i1), Some(&i2)) = (page_map.get(p1), page_map.get(p2)) {
 
-fn insert_pages(page_list: &mut Vec<usize>, p1: usize, p2: usize) -> InsertResult {
-    let mut p1idx = None;
-    let mut p2idx = None;
-
-    for (idx, &page) in page_list.iter().enumerate() {
-        if page == p1 {
-            p1idx = Some(idx);
+            i1 < i2
+        } else {
+            true
         }
-        else if page == p1 {
-            p2idx = Some(idx);
-        }
-        if p1idx.is_some() && p2idx.is_some() {
-            break;
-        }
-    }
-
-    match (p1idx, p2idx) {
-        (Some(i), Some(j)) if i < j => InsertResult::Ok,
-        (Some(i), Some(j)) => InsertResult::Contradictory,
-        (Some(i), None) => {page_list.insert(i+1, p2); InsertResult::Ok}
-        (None, Some(j)) => {page_list.insert(j, p1); InsertResult::Ok}
     }
 }
 
+fn parse_rules(lines: &[&str]) -> Vec<Rule> {
+    lines
+        .into_iter()
+        .map(|line| line.parse().unwrap())
+        .collect()
+}
+
+fn parse_pagelist(s: &str) -> Vec<i32> {
+    s.split(',').map(|w| w.parse().unwrap()).collect()
+}
+
+fn make_page_map(page_list: &[i32]) -> BTreeMap<i32, usize> {
+    page_list
+        .into_iter()
+        .enumerate()
+        .map(|(idx, &page)| (page, idx))
+        .collect()
+}
+
+fn validate(page_list: &[i32], rules: &[Rule]) -> bool {
+    let page_map = make_page_map(page_list);
+    rules.into_iter().all(|rule| rule.check_page_map(&page_map))
+}
 
 #[cfg(test)]
 mod test {
@@ -83,7 +104,7 @@ mod test {
         61,13,29\n\
         97,13,75,29,47\n\
         ";
-    
+
     #[test]
     fn part1test() {
         assert_eq!(day05part1(TEST_INPUT), 143);
