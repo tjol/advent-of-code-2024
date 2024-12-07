@@ -76,13 +76,13 @@ impl Map {
         self.matrix[idx] = MapTile::Visited;
     }
 
-    pub fn add_obstable(&mut self, pos: Pos) {
+    pub fn add_obstacle(&mut self, pos: Pos) {
         let Pos(x, y) = pos;
         let idx = self.width() * y as usize + x as usize;
         self.matrix[idx] = MapTile::Obstacle;
     }
 
-    pub fn remove_obstable(&mut self, pos: Pos) {
+    pub fn remove_obstacle(&mut self, pos: Pos) {
         let Pos(x, y) = pos;
         let idx = self.width() * y as usize + x as usize;
         self.matrix[idx] = MapTile::NotVisited;
@@ -151,11 +151,11 @@ pub fn day06part2(input: &str) -> usize {
         if map.contains(new_pos) {
             // What if there were an obstacle here?
             if new_pos != orig_pos && !candidate_locations.contains(&new_pos) {
-                map.add_obstable(new_pos);
+                map.add_obstacle(new_pos);
                 if has_loop(&map, orig_pos, Direction::North) {
                     candidate_locations.insert(new_pos);
                 }
-                map.remove_obstable(new_pos);
+                map.remove_obstacle(new_pos);
             }
             guard_pos = new_pos;
         } else {
