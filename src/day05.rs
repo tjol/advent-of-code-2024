@@ -13,7 +13,7 @@ pub fn day05part1(input: &str) -> i32 {
 
     let rules = parse_rules(rule_lines);
     let page_lists: Vec<_> = trial_lines
-        .into_iter()
+        .iter()
         .filter(|l| !l.is_empty())
         .map(|l| parse_pagelist(l))
         .collect();
@@ -43,7 +43,7 @@ pub fn day05part2(input: &str) -> i32 {
 
     let rules = parse_rules(rule_lines);
     let page_lists: Vec<_> = trial_lines
-        .into_iter()
+        .iter()
         .filter(|l| !l.is_empty())
         .map(|l| parse_pagelist(l))
         .collect();
@@ -54,8 +54,8 @@ pub fn day05part2(input: &str) -> i32 {
         .cloned()
         .collect();
 
-    for mut list in &mut invalid {
-        reorder_list(&mut list, &rules);
+    for list in &mut invalid {
+        reorder_list(list, &rules);
     }
 
     let mid_sum = invalid
@@ -119,7 +119,7 @@ impl Rule {
 
 fn parse_rules(lines: &[&str]) -> Vec<Rule> {
     lines
-        .into_iter()
+        .iter()
         .map(|line| line.parse().unwrap())
         .collect()
 }
@@ -130,7 +130,7 @@ fn parse_pagelist(s: &str) -> Vec<i32> {
 
 fn make_page_map(page_list: &[i32]) -> BTreeMap<i32, usize> {
     page_list
-        .into_iter()
+        .iter()
         .enumerate()
         .map(|(idx, &page)| (page, idx))
         .collect()
@@ -138,7 +138,7 @@ fn make_page_map(page_list: &[i32]) -> BTreeMap<i32, usize> {
 
 fn validate(page_list: &[i32], rules: &[Rule]) -> bool {
     let page_map = make_page_map(page_list);
-    rules.into_iter().all(|rule| rule.check_page_map(&page_map))
+    rules.iter().all(|rule| rule.check_page_map(&page_map))
 }
 
 fn reorder_list(page_list: &mut [i32], rules: &[Rule]) {

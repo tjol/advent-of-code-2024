@@ -104,7 +104,6 @@ impl FromStr for BareEquation {
         let (left, right) = s.split_once(':').unwrap();
         let result = left.parse().unwrap();
         let operands = right
-            .trim()
             .split_whitespace()
             .map(|s| s.parse().unwrap())
             .collect();
@@ -115,7 +114,7 @@ impl FromStr for BareEquation {
 
 fn parse_rules(lines: &[&str]) -> Vec<BareEquation> {
     lines
-        .into_iter()
+        .iter()
         .map(|line| line.parse().unwrap())
         .collect()
 }

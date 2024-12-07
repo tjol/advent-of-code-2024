@@ -15,7 +15,7 @@ pub fn day01part1(input: &str) -> i32 {
     right.sort();
 
     left.into_iter()
-        .zip(right.into_iter())
+        .zip(right)
         .map(|(a, b)| (a - b).abs())
         .sum()
 }

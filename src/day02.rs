@@ -26,19 +26,19 @@ pub fn day02part2(input: &str) -> i32 {
         .filter(|v| !v.is_empty());
 
     level_lines
-        .filter(|levels| valid2(&levels, 1) || valid2(&levels, -1))
+        .filter(|levels| valid2(levels, 1) || valid2(levels, -1))
         .count() as i32
 }
 
 fn valid1(levels: &[i32], sign: i32) -> bool {
     match levels
-        .into_iter()
+        .iter()
         .tuple_windows()
         .map(|(a, b)| (b - a) * sign)
         .minmax()
     {
         itertools::MinMaxResult::MinMax(mindiff, maxdiff) => mindiff >= 1 && maxdiff <= 3,
-        itertools::MinMaxResult::OneElement(diff) => diff >= 1 && diff <= 3,
+        itertools::MinMaxResult::OneElement(diff) => (1..=3).contains(&diff),
         itertools::MinMaxResult::NoElements => false,
     }
 }
@@ -52,13 +52,13 @@ fn valid2(levels: &[i32], sign: i32) -> bool {
 
     for i in 1..levels.len() {
         let diff = (levels[i] - prev) * sign;
-        if diff < 1 || diff > 3 {
+        if !(1..=3).contains(&diff) {
             if had_invalid {
                 return false;
             } else if i >= 2 {
                 // check if removing the previous level might help
                 let diff2 = (levels[i] - levels[i - 2]) * sign;
-                if diff2 >= 1 && diff2 <= 3 && valid1(&levels[i..], sign) {
+                if (1..=3).contains(&diff2) && valid1(&levels[i..], sign) {
                     return true;
                 }
             } else if i == 1 && valid1(&levels[i..], sign) {
@@ -70,7 +70,7 @@ fn valid2(levels: &[i32], sign: i32) -> bool {
             prev = levels[i];
         }
     }
-    return true;
+    true
 }
 
 #[cfg(test)]
