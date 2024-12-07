@@ -1,4 +1,8 @@
-use std::{collections::HashSet, ops::{Add, Sub}, str::FromStr};
+use std::{
+    collections::HashSet,
+    ops::{Add, Sub},
+    str::FromStr,
+};
 
 use itertools::Position;
 
@@ -17,7 +21,7 @@ struct Map {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 struct Pos(pub i32, pub i32);
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 enum Direction {
     North,
     East,
@@ -98,14 +102,17 @@ impl Map {
     }
 
     pub fn print(&self) {
-        for y in 0..self.height() as i32{
+        for y in 0..self.height() as i32 {
             for x in 0..self.width() as i32 {
-                let pos = Pos(x,y);
-                print!("{}", match self.get(pos).unwrap() {
-                    MapTile::Visited => 'x',
-                    MapTile::Obstacle => '#',
-                    MapTile::NotVisited => ' '
-                });
+                let pos = Pos(x, y);
+                print!(
+                    "{}",
+                    match self.get(pos).unwrap() {
+                        MapTile::Visited => 'x',
+                        MapTile::Obstacle => '#',
+                        MapTile::NotVisited => ' ',
+                    }
+                );
             }
             print!("\n")
         }
@@ -152,6 +159,57 @@ pub fn day06part1(input: &str) -> usize {
     map.count_visited()
 }
 
+pub fn day06part2(input: &str) -> usize {
+    let (orig_pos, mut map) = parse_map(input);
+    let mut candidate_locations = HashSet::new();
+
+    let mut dir = Direction::North;
+    let mut guard_pos = orig_pos;
+    loop {
+        let mut new_pos = guard_pos + dir;
+        while map.get(new_pos) == Some(MapTile::Obstacle) {
+            dir = dir.turn_right();
+            new_pos = guard_pos + dir;
+        }
+        if map.contains(new_pos) {
+            // What if there were an obstacle here?
+            if new_pos != orig_pos && !candidate_locations.contains(&new_pos) {
+                map.add_obstable(new_pos);
+                if has_loop(&map, orig_pos, Direction::North) {
+                    candidate_locations.insert(new_pos);
+                }
+                map.remove_obstable(new_pos);
+            }
+            guard_pos = new_pos;
+        } else {
+            break;
+        }
+    }
+
+    candidate_locations.len()
+}
+
+fn has_loop(map: &Map, mut pos: Pos, mut dir: Direction) -> bool {
+    let mut visited = HashSet::<(Pos, Direction)>::new();
+    
+    loop {
+        if !visited.insert((pos, dir)) {
+            // previously visited!
+            return true;
+        }
+        let mut new_pos = pos + dir;
+        while map.get(new_pos) == Some(MapTile::Obstacle) {
+            dir = dir.turn_right();
+            new_pos = pos + dir;
+        }
+        if map.contains(new_pos) {
+            pos = new_pos;
+        } else {
+            // we left the map -> no loop
+            return false;
+        }
+    }
+}
 
 #[cfg(test)]
 mod test {
@@ -173,5 +231,10 @@ mod test {
     #[test]
     fn part1test() {
         assert_eq!(day06part1(TEST_INPUT), 41);
+    }
+
+    #[test]
+    fn part2test() {
+        assert_eq!(day06part2(TEST_INPUT), 6);
     }
 }

@@ -17,7 +17,7 @@ fn main() {
         3 => run_puzzle((day03::day03part1, day03::day03part2), &args[2..]),
         4 => run_puzzle((day04::day04part1, day04::day04part2), &args[2..]),
         5 => run_puzzle((day05::day05part1, day05::day05part2), &args[2..]),
-        6 => run_puzzle((day06::day06part1/*, day06::day06part2*/), &args[2..]),
+        6 => run_puzzle((day06::day06part1, day06::day06part2), &args[2..]),
         7 => run_puzzle((day07::day07part1, day07::day07part2), &args[2..]),
         _ => panic!("no such day"),
     }
