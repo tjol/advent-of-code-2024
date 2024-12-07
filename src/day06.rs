@@ -1,10 +1,4 @@
-use std::{
-    collections::HashSet,
-    ops::{Add, Sub},
-    str::FromStr,
-};
-
-use itertools::Position;
+use std::{collections::HashSet, ops::Add};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum MapTile {
@@ -100,23 +94,6 @@ impl Map {
             .filter(|&&tile| tile == MapTile::Visited)
             .count()
     }
-
-    pub fn print(&self) {
-        for y in 0..self.height() as i32 {
-            for x in 0..self.width() as i32 {
-                let pos = Pos(x, y);
-                print!(
-                    "{}",
-                    match self.get(pos).unwrap() {
-                        MapTile::Visited => 'x',
-                        MapTile::Obstacle => '#',
-                        MapTile::NotVisited => ' ',
-                    }
-                );
-            }
-            print!("\n")
-        }
-    }
 }
 
 fn parse_map(s: &str) -> (Pos, Map) {
@@ -191,7 +168,7 @@ pub fn day06part2(input: &str) -> usize {
 
 fn has_loop(map: &Map, mut pos: Pos, mut dir: Direction) -> bool {
     let mut visited = HashSet::<(Pos, Direction)>::new();
-    
+
     loop {
         if !visited.insert((pos, dir)) {
             // previously visited!
