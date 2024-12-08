@@ -9,3 +9,4 @@ Few-word reaction to the different days:
 - Day 5: These are getting harder. But a fairly trivial solution worked.
 - Day 6: My solution is simple (and maybe not ideal), but it took me a while to get there.
 - Day 7: This one was nice.
+- Day 8: Are these getting easier?
