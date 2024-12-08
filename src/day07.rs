@@ -113,10 +113,7 @@ impl FromStr for BareEquation {
 }
 
 fn parse_rules(lines: &[&str]) -> Vec<BareEquation> {
-    lines
-        .iter()
-        .map(|line| line.parse().unwrap())
-        .collect()
+    lines.iter().map(|line| line.parse().unwrap()).collect()
 }
 
 #[cfg(test)]

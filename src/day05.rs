@@ -118,10 +118,7 @@ impl Rule {
 }
 
 fn parse_rules(lines: &[&str]) -> Vec<Rule> {
-    lines
-        .iter()
-        .map(|line| line.parse().unwrap())
-        .collect()
+    lines.iter().map(|line| line.parse().unwrap()).collect()
 }
 
 fn parse_pagelist(s: &str) -> Vec<i32> {

@@ -7,6 +7,7 @@ mod day04;
 mod day05;
 mod day06;
 mod day07;
+mod day08;
 
 fn main() {
     let args: Vec<_> = std::env::args().collect();
@@ -19,6 +20,7 @@ fn main() {
         5 => run_puzzle((day05::day05part1, day05::day05part2), &args[2..]),
         6 => run_puzzle((day06::day06part1, day06::day06part2), &args[2..]),
         7 => run_puzzle((day07::day07part1, day07::day07part2), &args[2..]),
+        8 => run_puzzle((day08::day08part1, day08::day08part2), &args[2..]),
         _ => panic!("no such day"),
     }
 }
@@ -46,7 +48,7 @@ trait AdventPuzzle: Sized {
 impl<F, R> AdventPuzzle for F
 where
     F: FnOnce(&str) -> R,
-    R: Display
+    R: Display,
 {
     fn run(self, input: &str) -> String {
         self(input).to_string()
@@ -54,8 +56,10 @@ where
 }
 
 impl<P1, P2> AdventPuzzle for (P1, P2)
-where P1: AdventPuzzle, 
-P2:AdventPuzzle {
+where
+    P1: AdventPuzzle,
+    P2: AdventPuzzle,
+{
     fn run(self, input: &str) -> String {
         let (p1, p2) = self;
         format!("{}\n{}", p1.run(input), p2.run(input))
