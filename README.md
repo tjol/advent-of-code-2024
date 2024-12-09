@@ -10,3 +10,4 @@ Few-word reaction to the different days:
 - Day 6: My solution is simple (and maybe not ideal), but it took me a while to get there.
 - Day 7: This one was nice.
 - Day 8: Are these getting easier?
+- Day 9: Ok *now* they're getting a little more involved
