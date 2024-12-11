@@ -12,3 +12,4 @@ Few-word reaction to the different days:
 - Day 8: Are these getting easier?
 - Day 9: Ok *now* they're getting a little more involved
 - Day 10: I wondered when we were going to get a map search thing
+- Day 11: Part 2 was as easy as it was predictable
