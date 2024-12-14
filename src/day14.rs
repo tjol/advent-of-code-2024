@@ -1,5 +1,3 @@
-use std::{fs::OpenOptions, io::Write};
-
 use itertools::Itertools;
 use regex::Regex;
 
@@ -12,31 +10,68 @@ pub fn day14part1(input: &str) -> i64 {
 }
 
 pub fn day14part2(input: &str) -> i64 {
-    let mut robots = parse_robots(input);
+    let robots = parse_robots(input);
 
-    let mut out_f = OpenOptions::new()
-        .write(true)
-        .truncate(true)
-        .create(true)
-        .open("robots.bin")
-        .unwrap();
+    let (w, h) = REGION_SIZE;
+    let dim = w.max(h);
+    let states = (0..dim)
+        .map(|i| simulate_robots(&robots, REGION_SIZE, i))
+        .collect_vec();
 
-    const ANSWER: i64 = 6587; // found by looking at the video in imagej
+    // the x coordinate repeats every w frames
+    let x_vars = states[0..w as usize]
+        .iter()
+        .map(|robots| {
+            let n = robots.len() as f64;
+            let mean = robots.iter().map(|r| r.pos.0 as f64).sum::<f64>() / n;
+            let var = robots
+                .iter()
+                .map(|r| (r.pos.0 as f64 - mean).powi(2))
+                .sum::<f64>()
+                / n;
+            var
+        })
+        .collect_vec();
+    // the y coordinate repeats every h frames
+    let y_vars = states[0..h as usize]
+        .iter()
+        .map(|robots| {
+            let n = robots.len() as f64;
+            let mean = robots.iter().map(|r| r.pos.1 as f64).sum::<f64>() / n;
+            let var = robots
+                .iter()
+                .map(|r| (r.pos.1 as f64 - mean).powi(2))
+                .sum::<f64>()
+                / n;
+            var
+        })
+        .collect_vec();
 
-    for i in 0..(103 * 101) {
-        let img = robot_density_img(&robots, REGION_SIZE);
-        let img_bytes =
-            unsafe { std::slice::from_raw_parts(img.as_ptr() as *const u8, img.len() * 2) };
-        out_f.write_all(img_bytes).unwrap();
+    // find the minimum variance -> that's when the coordinates match our tree
+    let a = x_vars
+        .iter()
+        .enumerate()
+        .min_by(|(_, v1), (_, v2)| v1.partial_cmp(v2).unwrap())
+        .unwrap()
+        .0 as i64;
+    let b = y_vars
+        .iter()
+        .enumerate()
+        .min_by(|(_, v1), (_, v2)| v1.partial_cmp(v2).unwrap())
+        .unwrap()
+        .0 as i64;
 
-        if i == ANSWER {
-            print_robots(&robots, REGION_SIZE);
+    // Find integers (n, m) s.t. a + n*w = b + m*h
+    // equiv: find an integer n such that a - b + n * w is divisible by h
+    for n in 0..h {
+        if (a - b + n * w).rem_euclid(h) == 0 {
+            let t = a + n * w;
+            // print_robots(&simulate_robots(&robots, REGION_SIZE, t), REGION_SIZE);
+            return t;
         }
-
-        step_robots_once(&mut robots, REGION_SIZE);
     }
 
-    ANSWER
+    0
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -78,16 +113,7 @@ fn simulate_robots(robots: &[Robot], region_size: (i64, i64), iterations: i64) -
         .collect()
 }
 
-fn step_robots_once(robots: &mut [Robot], region_size: (i64, i64)) {
-    let (w, h) = region_size;
-
-    for r in robots {
-        let x = (r.pos.0 + r.v.0).rem_euclid(w);
-        let y = (r.pos.1 + r.v.1).rem_euclid(h);
-        r.pos = (x, y);
-    }
-}
-
+#[allow(unused)]
 fn print_robots(robots: &[Robot], region_size: (i64, i64)) {
     let (w, h) = region_size;
     let mut map = (0..h).map(|_| vec![0; w as usize]).collect_vec();
@@ -106,6 +132,7 @@ fn print_robots(robots: &[Robot], region_size: (i64, i64)) {
     println!("{}", map_s);
 }
 
+#[allow(unused)]
 fn robot_density_img(robots: &[Robot], region_size: (i64, i64)) -> Vec<u16> {
     let (w, h) = region_size;
     let mut img = vec![0; (w * h) as usize];
