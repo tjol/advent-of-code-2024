@@ -1,3 +1,5 @@
+#![allow(clippy::let_and_return)]
+
 use itertools::Itertools;
 use regex::Regex;
 
@@ -38,7 +40,9 @@ fn get_move(machine: &ClawMachine) -> Option<(i64, i64)> {
         let m = (machine.prize.0 - n * machine.a.0) / machine.b.0;
 
         // check the solution
-        if n * machine.a.0 + m * machine.b.0 == machine.prize.0 && n * machine.a.1 + m * machine.b.1 == machine.prize.1 {
+        if n * machine.a.0 + m * machine.b.0 == machine.prize.0
+            && n * machine.a.1 + m * machine.b.1 == machine.prize.1
+        {
             return Some((n, m));
         }
     }

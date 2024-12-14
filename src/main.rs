@@ -13,6 +13,7 @@ mod day10;
 mod day11;
 mod day12;
 mod day13;
+mod day14;
 
 fn main() {
     let args: Vec<_> = std::env::args().collect();
@@ -31,6 +32,7 @@ fn main() {
         11 => run_puzzle((day11::day11part1, day11::day11part2), &args[2..]),
         12 => run_puzzle((day12::day12part1, day12::day12part2), &args[2..]),
         13 => run_puzzle((day13::day13part1, day13::day13part2), &args[2..]),
+        14 => run_puzzle((day14::day14part1, day14::day14part2), &args[2..]),
         _ => panic!("no such day"),
     }
 }

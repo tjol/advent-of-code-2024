@@ -196,7 +196,7 @@ fn count_sides(map: &Map<Plot>, region: i32) -> i32 {
                         // 1 .
                         // ? 2
                         edge = Edge::Top;
-                        x +=  1;
+                        x += 1;
                         y += 1;
                         sides += 1;
                     } else if map.get(x, y + 1).is_some_and(|p| p.region == Some(region)) {

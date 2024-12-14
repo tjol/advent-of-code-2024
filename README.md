@@ -15,3 +15,4 @@ Few-word reaction to the different days:
 - Day 11: Part 2 was as easy as it was predictable
 - Day 12: We're entering the "there's a trick to it" era of the calendar
 - Day 13: I started out thinking I was so clever and got bitten by float accuracy
+- Day 14: Part 2 was a surprise!
