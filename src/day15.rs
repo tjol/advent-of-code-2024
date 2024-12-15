@@ -1,4 +1,7 @@
-use std::{fmt::Debug, str::FromStr};
+use std::{
+    fmt::{Debug, Display},
+    str::FromStr,
+};
 
 pub fn day15part1(input: &str) -> i32 {
     let (map_input, program) = input.split_once("\n\n").unwrap();
@@ -20,9 +23,26 @@ pub fn day15part1(input: &str) -> i32 {
         .sum::<i32>()
 }
 
-// pub fn day15part2(input: &str) -> i64 {
-//     todo!()
-// }
+pub fn day15part2(input: &str) -> i32 {
+    let (map_input, program) = input.split_once("\n\n").unwrap();
+
+    let orig_map: Map<Tile> = map_input.parse().unwrap();
+    let mut map = orig_map.double();
+    let moves = parse_moves(program);
+
+    let (mut x, mut y) = map.find_robot().unwrap();
+
+    for the_move in moves {
+        if let Some((new_x, new_y)) = map.try_move((x, y), the_move) {
+            x = new_x;
+            y = new_y;
+        }
+    }
+
+    map.find_all(|&obj| obj == Tile2::LeftBox)
+        .map(|(x, y)| x + 100 * y)
+        .sum::<i32>()
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Tile {
@@ -30,6 +50,41 @@ enum Tile {
     Box,
     Wall,
     Robot,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Tile2 {
+    Empty,
+    LeftBox,
+    RightBox,
+    Wall,
+    Robot,
+}
+
+impl From<Tile> for (Tile2, Tile2) {
+    fn from(tile: Tile) -> Self {
+        match tile {
+            Tile::Empty => (Tile2::Empty, Tile2::Empty),
+            Tile::Box => (Tile2::LeftBox, Tile2::RightBox),
+            Tile::Wall => (Tile2::Wall, Tile2::Wall),
+            Tile::Robot => (Tile2::Robot, Tile2::Empty),
+        }
+    }
+}
+
+impl Display for Tile2 {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        Display::fmt(
+            &match self {
+                Tile2::Empty => '.',
+                Tile2::LeftBox => '[',
+                Tile2::RightBox => ']',
+                Tile2::Wall => '#',
+                Tile2::Robot => '@',
+            },
+            f,
+        )
+    }
 }
 
 impl FromStr for Tile {
@@ -79,6 +134,20 @@ impl Move {
             Self::Up => -1,
             _ => 0,
         }
+    }
+}
+
+impl Display for Move {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        Display::fmt(
+            &match self {
+                Self::Up => '^',
+                Self::Down => 'v',
+                Self::Left => '<',
+                Self::Right => '>',
+            },
+            f,
+        )
     }
 }
 
@@ -189,6 +258,117 @@ impl Map<Tile> {
             }
         }
     }
+
+    pub fn double(&self) -> Map<Tile2> {
+        let width = self.width * 2;
+        let mut matrix = vec![];
+        for &tile in &self.matrix {
+            let (l, r) = tile.into();
+            matrix.push(l);
+            matrix.push(r);
+        }
+        Map::<Tile2> { width, matrix }
+    }
+}
+
+impl Map<Tile2> {
+    pub fn find_robot(&self) -> Option<(i32, i32)> {
+        self.find_all(|&x| x == Tile2::Robot).next()
+    }
+
+    pub fn try_move(&mut self, from: (i32, i32), direction: Move) -> Option<(i32, i32)> {
+        if !self.can_move(from, direction) {
+            return None;
+        }
+
+        let (x0, y0) = from;
+
+        match self.get(x0, y0).copied() {
+            None | Some(Tile2::Wall) => unreachable!(),
+            Some(Tile2::Empty) => Some((x0, y0)),
+            Some(Tile2::Robot) => {
+                let x1 = x0 + direction.x();
+                let y1 = y0 + direction.y();
+                self.try_move((x1, y1), direction)?;
+                *self.get_mut(x1, y1).unwrap() = Tile2::Robot;
+                *self.get_mut(x0, y0).unwrap() = Tile2::Empty;
+                Some((x1, y1))
+            }
+            Some(Tile2::LeftBox) => match direction {
+                Move::Left => {
+                    self.try_move((x0 - 1, y0), Move::Left)?;
+                    *self.get_mut(x0 - 1, y0).unwrap() = Tile2::LeftBox;
+                    *self.get_mut(x0, y0).unwrap() = Tile2::RightBox;
+                    *self.get_mut(x0 + 1, y0).unwrap() = Tile2::Empty;
+                    Some((x0 - 1, y0))
+                }
+                Move::Right => {
+                    self.try_move((x0 + 2, y0), Move::Right)?;
+                    *self.get_mut(x0 + 1, y0).unwrap() = Tile2::LeftBox;
+                    *self.get_mut(x0 + 2, y0).unwrap() = Tile2::RightBox;
+                    *self.get_mut(x0, y0).unwrap() = Tile2::Empty;
+                    Some((x0 + 1, y0))
+                }
+                Move::Up => {
+                    self.try_move((x0, y0 - 1), Move::Up)?;
+                    self.try_move((x0 + 1, y0 - 1), Move::Up)?;
+                    *self.get_mut(x0, y0 - 1).unwrap() = Tile2::LeftBox;
+                    *self.get_mut(x0 + 1, y0 - 1).unwrap() = Tile2::RightBox;
+                    *self.get_mut(x0, y0).unwrap() = Tile2::Empty;
+                    *self.get_mut(x0 + 1, y0).unwrap() = Tile2::Empty;
+                    Some((x0, y0 - 1))
+                }
+                Move::Down => {
+                    self.try_move((x0, y0 + 1), Move::Down)?;
+                    self.try_move((x0 + 1, y0 + 1), Move::Down)?;
+                    *self.get_mut(x0, y0 + 1).unwrap() = Tile2::LeftBox;
+                    *self.get_mut(x0 + 1, y0 + 1).unwrap() = Tile2::RightBox;
+                    *self.get_mut(x0, y0).unwrap() = Tile2::Empty;
+                    *self.get_mut(x0 + 1, y0).unwrap() = Tile2::Empty;
+                    Some((x0, y0 + 1))
+                }
+            },
+            Some(Tile2::RightBox) => self.try_move((x0 - 1, y0), direction),
+        }
+    }
+
+    pub fn can_move(&self, from: (i32, i32), direction: Move) -> bool {
+        let (x0, y0) = from;
+        let x1 = x0 + direction.x();
+        let y1 = y0 + direction.y();
+
+        match self.get(x0, y0).copied() {
+            None | Some(Tile2::Wall) => false,
+            Some(Tile2::Empty) => true,
+            Some(Tile2::Robot) => self.can_move((x1, y1), direction),
+            Some(Tile2::LeftBox) => {
+                if direction.y() == 0 {
+                    self.can_move((x1, y1), direction)
+                } else {
+                    self.can_move((x1, y1), direction) && self.can_move((x1 + 1, y1), direction)
+                }
+            }
+            Some(Tile2::RightBox) => {
+                if direction.y() == 0 {
+                    self.can_move((x1, y1), direction)
+                } else {
+                    self.can_move((x1, y1), direction) && self.can_move((x1 - 1, y1), direction)
+                }
+            }
+        }
+    }
+}
+
+impl Display for Map<Tile2> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        for y in 0..self.height() {
+            for x in 0..self.width() {
+                Display::fmt(self.get(x, y).unwrap(), f)?;
+            }
+            Display::fmt(&'\n', f)?;
+        }
+        Ok(())
+    }
 }
 
 #[cfg(test)]
@@ -222,5 +402,10 @@ mod test {
     #[test]
     fn part1test() {
         assert_eq!(day15part1(TEST_INPUT), 10092);
+    }
+
+    #[test]
+    fn part2test() {
+        assert_eq!(day15part2(TEST_INPUT), 9021);
     }
 }

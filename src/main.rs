@@ -34,8 +34,7 @@ fn main() {
         12 => run_puzzle((day12::day12part1, day12::day12part2), &args[2..]),
         13 => run_puzzle((day13::day13part1, day13::day13part2), &args[2..]),
         14 => run_puzzle((day14::day14part1, day14::day14part2), &args[2..]),
-        15 => run_puzzle(day15::day15part1, &args[2..]),
-        // 15 => run_puzzle((day15::day15part1, day15::day15part2), &args[2..]),
+        15 => run_puzzle((day15::day15part1, day15::day15part2), &args[2..]),
         _ => panic!("no such day"),
     }
 }
