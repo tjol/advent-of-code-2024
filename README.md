@@ -18,3 +18,4 @@ Few-word reaction to the different days:
 - Day 14: Part 2 was a surprise!
 - Day 15: Don't know if these are getting harder, but they're definitely getting more complicated
 - Day 16: Tough but fair. Actually the progression from easier to harder inputs was very well done!
+- Day 17: Unclear if the wine helped but I got there in the end. Not sure if my solution is general or if the pattern I think I spotted is only in my input by chance...
