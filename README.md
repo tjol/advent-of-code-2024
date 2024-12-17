@@ -17,3 +17,4 @@ Few-word reaction to the different days:
 - Day 13: I started out thinking I was so clever and got bitten by float accuracy
 - Day 14: Part 2 was a surprise!
 - Day 15: Don't know if these are getting harder, but they're definitely getting more complicated
+- Day 16: Tough but fair. Actually the progression from easier to harder inputs was very well done!

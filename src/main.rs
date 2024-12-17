@@ -15,6 +15,7 @@ mod day12;
 mod day13;
 mod day14;
 mod day15;
+mod day16;
 
 fn main() {
     let args: Vec<_> = std::env::args().collect();
@@ -35,6 +36,7 @@ fn main() {
         13 => run_puzzle((day13::day13part1, day13::day13part2), &args[2..]),
         14 => run_puzzle((day14::day14part1, day14::day14part2), &args[2..]),
         15 => run_puzzle((day15::day15part1, day15::day15part2), &args[2..]),
+        16 => run_puzzle(CombinedSolution { func: day16::day16 }, &args[2..]),
         _ => panic!("no such day"),
     }
 }
@@ -77,6 +79,28 @@ where
     fn run(self, input: &str) -> String {
         let (p1, p2) = self;
         format!("{}\n{}", p1.run(input), p2.run(input))
+    }
+}
+
+struct CombinedSolution<F, R1, R2>
+where
+    F: FnOnce(&str) -> (R1, R2),
+    R1: Display,
+    R2: Display,
+{
+    pub func: F,
+}
+
+impl<F, R1, R2> AdventPuzzle for CombinedSolution<F, R1, R2>
+where
+    F: FnOnce(&str) -> (R1, R2),
+    R1: Display,
+    R2: Display,
+{
+    fn run(self, input: &str) -> String {
+        let f = self.func;
+        let (r1, r2) = f(input);
+        format!("{}\n{}", r1, r2)
     }
 }
 
