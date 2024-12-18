@@ -1,4 +1,6 @@
-use std::{collections::BTreeMap, str::FromStr};
+use std::str::FromStr;
+
+use hashbrown::HashMap;
 
 pub fn day05part1(input: &str) -> i32 {
     let lines: Vec<&str> = input.lines().map(str::trim).collect();
@@ -81,7 +83,7 @@ impl FromStr for Rule {
 }
 
 impl Rule {
-    pub fn check_page_map(&self, page_map: &BTreeMap<i32, usize>) -> bool {
+    pub fn check_page_map(&self, page_map: &HashMap<i32, usize>) -> bool {
         let Self(p1, p2) = self;
         if let (Some(&i1), Some(&i2)) = (page_map.get(p1), page_map.get(p2)) {
             i1 < i2
@@ -125,7 +127,7 @@ fn parse_pagelist(s: &str) -> Vec<i32> {
     s.split(',').map(|w| w.parse().unwrap()).collect()
 }
 
-fn make_page_map(page_list: &[i32]) -> BTreeMap<i32, usize> {
+fn make_page_map(page_list: &[i32]) -> HashMap<i32, usize> {
     page_list
         .iter()
         .enumerate()

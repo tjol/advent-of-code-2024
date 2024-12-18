@@ -1,5 +1,6 @@
-use std::collections::{BinaryHeap, HashSet};
+use std::collections::BinaryHeap;
 
+use hashbrown::HashSet;
 use itertools::Itertools;
 
 pub fn day18part1(input: &str) -> usize {

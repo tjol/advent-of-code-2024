@@ -1,7 +1,6 @@
-use std::{
-    collections::{HashMap, HashSet},
-    ops::{Add, Sub},
-};
+use std::ops::{Add, Sub};
+
+use hashbrown::{HashMap, HashSet};
 
 pub fn day08part1(input: &str) -> usize {
     let map = parse_tower_locations(input);

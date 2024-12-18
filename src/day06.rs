@@ -1,4 +1,6 @@
-use std::{collections::HashSet, ops::Add};
+use std::ops::Add;
+
+use hashbrown::HashSet;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum MapTile {

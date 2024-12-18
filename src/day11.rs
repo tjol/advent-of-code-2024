@@ -1,4 +1,4 @@
-use std::collections::BTreeMap;
+use hashbrown::HashMap;
 
 pub fn day11part1(input: &str) -> usize {
     let mut counters = parse_stones(input);
@@ -20,7 +20,7 @@ pub fn day11part2(input: &str) -> usize {
     total_stones(&counters)
 }
 
-fn parse_stones(input: &str) -> BTreeMap<usize, usize> {
+fn parse_stones(input: &str) -> HashMap<usize, usize> {
     input
         .split_whitespace()
         .filter_map(|w| w.parse().ok())
@@ -28,8 +28,8 @@ fn parse_stones(input: &str) -> BTreeMap<usize, usize> {
         .collect()
 }
 
-fn blink(counters: &BTreeMap<usize, usize>) -> BTreeMap<usize, usize> {
-    let mut new_stones = BTreeMap::new();
+fn blink(counters: &HashMap<usize, usize>) -> HashMap<usize, usize> {
+    let mut new_stones = HashMap::new();
 
     for (&value, &count) in counters {
         if value == 0 {
@@ -53,7 +53,7 @@ fn blink(counters: &BTreeMap<usize, usize>) -> BTreeMap<usize, usize> {
     new_stones
 }
 
-fn total_stones(counters: &BTreeMap<usize, usize>) -> usize {
+fn total_stones(counters: &HashMap<usize, usize>) -> usize {
     counters.values().sum()
 }
 

@@ -1,4 +1,4 @@
-use std::collections::BTreeMap;
+use hashbrown::HashMap;
 
 pub fn day09part1(input: &str) -> usize {
     let mut disk = parse_disk_map(input);
@@ -42,7 +42,7 @@ pub fn day09part1(input: &str) -> usize {
 pub fn day09part2(input: &str) -> usize {
     let mut disk = parse_disk_map(input);
 
-    let lengths: BTreeMap<FileId, usize> = disk
+    let lengths: HashMap<FileId, usize> = disk
         .iter()
         .filter_map(|seg| {
             if let Fragment::File(file_id) = seg.content {

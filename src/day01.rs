@@ -1,4 +1,4 @@
-use std::collections::BTreeMap;
+use hashbrown::HashMap;
 
 pub fn day01part1(input: &str) -> i32 {
     let mut left = Vec::<i32>::new();
@@ -31,7 +31,7 @@ pub fn day01part2(input: &str) -> i64 {
         }
     }
 
-    let mut counts = BTreeMap::<i64, i64>::new();
+    let mut counts = HashMap::<i64, i64>::new();
     for n in right {
         counts.insert(n, counts.get(&n).copied().unwrap_or_default() + 1);
     }
