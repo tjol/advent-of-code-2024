@@ -52,7 +52,7 @@ fn get_solution(day: i8) -> Option<(Box<dyn AdventPuzzleSolution>, &'static str)
 
 fn main() {
     let args: Vec<_> = std::env::args().collect();
-    
+
     if args.len() >= 2 {
         let day = args[1].parse().unwrap();
         let (solution, default_input) = get_solution(day).unwrap();
@@ -142,9 +142,9 @@ fn run_puzzle(solution: &dyn AdventPuzzleSolution, input: &str) {
     let dt = t1 - t0;
     println!("{}", &answer);
     if dt.as_millis() >= 10 {
-    println!("⏱️  {} ms", dt.as_millis());
+        println!("⏱️  {} ms", dt.as_millis());
     } else {
-    println!("⏱️  {:.2} ms", dt.as_micros() as f64 * 1e-3);
+        println!("⏱️  {:.2} ms", dt.as_micros() as f64 * 1e-3);
     }
-    println!("");
+    println!();
 }

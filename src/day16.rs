@@ -1,13 +1,7 @@
-use std::{
-    cmp::Ordering,
-    collections::{BinaryHeap},
-    fmt::Debug,
-    ops::Add,
-    str::FromStr,
-};
+use std::{cmp::Ordering, collections::BinaryHeap, fmt::Debug, ops::Add, str::FromStr};
 
-use itertools::Itertools;
 use hashbrown::{HashMap, HashSet};
+use itertools::Itertools;
 
 pub fn day16(input: &str) -> (i32, usize) {
     let map: Map<Tile> = input.parse().unwrap();
