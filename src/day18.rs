@@ -4,7 +4,7 @@ use itertools::Itertools;
 
 pub fn day18part1(input: &str) -> usize {
     let blocks = parse(input);
-    shortest_path_len_from_input(71, 71, &blocks[0..1024]).unwrap_or_default()
+    shortest_path_len(71, 71, &blocks[0..1024]).unwrap_or_default()
 }
 
 pub fn day18part2(input: &str) -> String {
@@ -17,39 +17,39 @@ pub fn day18part2(input: &str) -> String {
     }
 }
 
-fn shortest_path_len_from_input(
-    width: usize,
-    height: usize,
-    blocks: &[(usize, usize)],
-) -> Option<usize> {
-    let mut map = (0..height).map(|_| vec![false; width]).collect_vec();
-
-    for &(x, y) in blocks {
-        map[y][x] = true;
-    }
-
-    shortest_path_len(&map)
-}
-
 fn first_block_in_path(
     width: usize,
     height: usize,
     blocks: &[(usize, usize)],
 ) -> Option<(usize, usize)> {
+    // lower and upper bound for the number of bytes needed
+    let mut lower = 0;
+    let mut upper = blocks.len();
+
+    while lower < upper {
+        let n = (lower + upper) / 2;
+        if shortest_path_len(width, height, &blocks[0..n]).is_some() {
+            // there is a path after n blocks.
+            lower = n + 1;
+        } else {
+            // there is no path
+            upper = n;
+        }
+    }
+
+    if lower == upper {
+        Some(blocks[lower - 1])
+    } else {
+        None
+    }
+}
+
+fn shortest_path_len(width: usize, height: usize, blocks: &[(usize, usize)]) -> Option<usize> {
     let mut map = (0..height).map(|_| vec![false; width]).collect_vec();
 
     for &(x, y) in blocks {
         map[y][x] = true;
-        if shortest_path_len(&map).is_none() {
-            return Some((x, y));
-        }
     }
-    None
-}
-
-fn shortest_path_len(map: &Vec<Vec<bool>>) -> Option<usize> {
-    let height = map.len();
-    let width = map[0].len();
 
     let dest = (width - 1, height - 1);
     let start = (0, 0);
@@ -143,7 +143,7 @@ mod test {
     #[test]
     fn part1test() {
         let blocks = parse(TEST_INPUT);
-        assert_eq!(shortest_path_len_from_input(7, 7, &blocks[0..12]), Some(22));
+        assert_eq!(shortest_path_len(7, 7, &blocks[0..12]), Some(22));
     }
 
     #[test]
