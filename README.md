@@ -21,3 +21,4 @@ Few-word reaction to the different days:
 - Day 17: Unclear if the wine helped but I got there in the end. Not sure if my solution is general or if the pattern I think I spotted is only in my input by chance...
 - Day 18: Part 2 was much easier than I expected (assuming you don't need your code to be fast)
 - Day 19: I can think of a few ways in which part 2 could have been a lot worse.
+- Day 20: This was fun! Reused stuff we've needed before, the twist was easy to deal with. Nice.

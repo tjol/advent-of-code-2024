@@ -2,8 +2,14 @@ use std::{fmt::Debug, ops::Add, str::FromStr};
 
 pub fn day20part1(input: &str) -> usize {
     let racetrack = RaceTrack::trace_map(input.parse().unwrap());
-    let shortcuts = racetrack.find_shortcuts();
-    shortcuts.iter().filter(|s| s.distance_saved >= 100).count()
+    let shortcuts = racetrack.find_shortcuts(2, 100);
+    shortcuts.len()
+}
+
+pub fn day20part2(input: &str) -> usize {
+    let racetrack = RaceTrack::trace_map(input.parse().unwrap());
+    let shortcuts = racetrack.find_shortcuts(20, 100);
+    shortcuts.len()
 }
 
 #[derive(Debug, Clone)]
@@ -66,40 +72,52 @@ impl RaceTrack {
         Self { map, track }
     }
 
-    pub fn find_shortcuts(&self) -> Vec<Shortcut> {
+    pub fn find_shortcuts(&self, max_dist: i32, min_benefit: i32) -> Vec<Shortcut> {
         let mut shortcuts = vec![];
 
         let dist_to_end = (self.track.len() - 1) as i32;
 
+        // prepare all possible moves
+        let mut moves = vec![];
+        for dx in 0..=max_dist {
+            for dy in 0..=(max_dist - dx) {
+                let dist = dx + dy;
+                if dist <= 1 {
+                    continue;
+                }
+                moves.push((dx, dy, dist));
+                if dy != 0 {
+                    moves.push((dx, -dy, dist));
+                }
+                if dx != 0 {
+                    moves.push((-dx, dy, dist));
+                    if dy != 0 {
+                        moves.push((-dx, -dy, dist));
+                    }
+                }
+            }
+        }
+
         for (i, &pos) in self.track.iter().enumerate() {
             let orig_dist = i as i32;
-            let dist_after = orig_dist + 2; // after the cheat
 
-            let possible_destinations = [
-                pos + Direction::North + Direction::North,
-                pos + Direction::North + Direction::East,
-                pos + Direction::East + Direction::East,
-                pos + Direction::East + Direction::South,
-                pos + Direction::South + Direction::South,
-                pos + Direction::South + Direction::West,
-                pos + Direction::West + Direction::West,
-                pos + Direction::West + Direction::North,
-            ];
+            for &(dx, dy, jump_dist) in &moves {
+                let dist_after = orig_dist + jump_dist; // after the cheat
+                let target = Pos(pos.0 + dx, pos.1 + dy);
 
-            for target in possible_destinations {
                 match self.map.get(target) {
-                    Some(RaceTrackTile::Path(d2)) if (d2 - dist_after) > 0 => {
+                    Some(RaceTrackTile::Path(d2)) if (d2 - dist_after) >= min_benefit => {
                         shortcuts.push(Shortcut {
                             distance_saved: d2 - dist_after,
                             from: pos,
-                            to: target
+                            to: target,
                         });
                     }
-                    Some(RaceTrackTile::End) if (dist_to_end - dist_after) > 0 => {
+                    Some(RaceTrackTile::End) if (dist_to_end - dist_after) >= min_benefit => {
                         shortcuts.push(Shortcut {
                             distance_saved: dist_to_end - dist_after,
                             from: pos,
-                            to: target
+                            to: target,
                         });
                     }
                     _ => {}
@@ -131,26 +149,6 @@ impl Add<Direction> for Pos {
             Direction::East => Self(x + 1, y),
             Direction::South => Self(x, y + 1),
             Direction::West => Self(x - 1, y),
-        }
-    }
-}
-
-impl Direction {
-    pub fn turn_right(self) -> Self {
-        match self {
-            Direction::North => Direction::East,
-            Direction::East => Direction::South,
-            Direction::South => Direction::West,
-            Direction::West => Direction::North,
-        }
-    }
-
-    pub fn turn_left(self) -> Self {
-        match self {
-            Direction::North => Direction::West,
-            Direction::East => Direction::North,
-            Direction::South => Direction::East,
-            Direction::West => Direction::South,
         }
     }
 }
@@ -208,11 +206,7 @@ impl<Item: Debug + Clone + Sized> Map<Item> {
     }
 
     pub fn set(&mut self, pos: Pos, value: Item) -> Option<Item> {
-        if let Some(item) = self.get_mut(pos) {
-            Some(std::mem::replace(item, value))
-        } else {
-            None
-        }
+        self.get_mut(pos).map(|item| std::mem::replace(item, value))
     }
 
     pub fn find_all<'a>(
@@ -280,7 +274,7 @@ mod test {
         let racetrack = RaceTrack::trace_map(TEST_INPUT.parse().unwrap());
         assert_eq!(racetrack.track.len(), 85);
 
-        let shortcuts = racetrack.find_shortcuts();
+        let shortcuts = racetrack.find_shortcuts(2, 2);
         let mut counts = HashMap::new();
         for s in shortcuts {
             *counts.entry(s.distance_saved).or_default() += 1;
@@ -297,5 +291,32 @@ mod test {
         assert_eq!(counts.get(&38), Some(&1));
         assert_eq!(counts.get(&40), Some(&1));
         assert_eq!(counts.get(&64), Some(&1));
+    }
+
+    #[test]
+    fn part2test() {
+        let racetrack = RaceTrack::trace_map(TEST_INPUT.parse().unwrap());
+        assert_eq!(racetrack.track.len(), 85);
+
+        let shortcuts = racetrack.find_shortcuts(20, 50);
+        let mut counts = HashMap::new();
+        for s in shortcuts {
+            *counts.entry(s.distance_saved).or_default() += 1;
+        }
+
+        assert_eq!(counts.get(&50), Some(&32));
+        assert_eq!(counts.get(&52), Some(&31));
+        assert_eq!(counts.get(&54), Some(&29));
+        assert_eq!(counts.get(&56), Some(&39));
+        assert_eq!(counts.get(&58), Some(&25));
+        assert_eq!(counts.get(&60), Some(&23));
+        assert_eq!(counts.get(&62), Some(&20));
+        assert_eq!(counts.get(&64), Some(&19));
+        assert_eq!(counts.get(&66), Some(&12));
+        assert_eq!(counts.get(&68), Some(&14));
+        assert_eq!(counts.get(&70), Some(&12));
+        assert_eq!(counts.get(&72), Some(&22));
+        assert_eq!(counts.get(&74), Some(&4));
+        assert_eq!(counts.get(&76), Some(&3));
     }
 }
