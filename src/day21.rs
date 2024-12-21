@@ -145,6 +145,10 @@ impl Keypad {
         Self { keys, blank }
     }
 
+    /// Assuming your robot is pointing at `from`, what would you have to enter
+    /// in the d-pad to press `key`
+    ///
+    /// Returns all direct L-shaped options
     pub fn get_sequences(&self, from: char, key: char) -> Vec<String> {
         let from = *self.keys.get(&from).unwrap();
         let dest = *self.keys.get(&key).unwrap();
@@ -152,74 +156,23 @@ impl Keypad {
 
         let mut paths = vec![];
 
-        if delta.0 >= 0 && delta.1 >= 0 {
-            paths.push(
-                (0..delta.0)
-                    .map(|_| '>')
-                    .chain((0..delta.1).map(|_| '^'))
-                    .chain(['A'])
-                    .collect(),
-            );
-            if delta.0 != 0 && delta.1 != 0 && (self.blank.1 != dest.1 || self.blank.0 != from.0) {
-                paths.push(
-                    (0..delta.1)
-                        .map(|_| '^')
-                        .chain((0..delta.0).map(|_| '>'))
-                        .chain(['A'])
-                        .collect(),
-                );
+        let x_sym = ['<', '>'][if delta.0 >= 0 { 1 } else { 0 }];
+        let y_sym = ['v', '^'][if delta.1 >= 0 { 1 } else { 0 }];
+        let x_subseq: String = std::iter::repeat_n(x_sym, delta.0.abs() as usize).collect();
+        let y_subseq: String = std::iter::repeat_n(y_sym, delta.1.abs() as usize).collect();
+
+        if self.blank.0 == from.0 && self.blank.1 == dest.1 {
+            // must move x first
+            paths.push(format!("{}{}A", &x_subseq, &y_subseq));
+        } else if self.blank.1 == from.1 && self.blank.0 == dest.0 {
+            // must move y first
+            paths.push(format!("{}{}A", &y_subseq, &x_subseq));
+        } else {
+            // either way is fine
+            paths.push(format!("{}{}A", &y_subseq, &x_subseq));
+            if delta.0 != 0 && delta.1 != 0 {
+                paths.push(format!("{}{}A", &x_subseq, &y_subseq));
             }
-        } else if delta.0 >= 0 && delta.1 < 0 {
-            paths.push(
-                (0..delta.0)
-                    .map(|_| '>')
-                    .chain((0..(-delta.1)).map(|_| 'v'))
-                    .chain(['A'])
-                    .collect(),
-            );
-            if delta.0 != 0 && (self.blank.1 != dest.1 || self.blank.0 != from.0) {
-                paths.push(
-                    (0..(-delta.1))
-                        .map(|_| 'v')
-                        .chain((0..delta.0).map(|_| '>'))
-                        .chain(['A'])
-                        .collect(),
-                );
-            }
-        } else if delta.0 < 0 && delta.1 >= 0 {
-            if delta.1 != 0 && (self.blank.1 != from.1 || self.blank.0 != dest.0) {
-                paths.push(
-                    (0..(-delta.0))
-                        .map(|_| '<')
-                        .chain((0..delta.1).map(|_| '^'))
-                        .chain(['A'])
-                        .collect(),
-                );
-            }
-            paths.push(
-                (0..delta.1)
-                    .map(|_| '^')
-                    .chain((0..(-delta.0)).map(|_| '<'))
-                    .chain(['A'])
-                    .collect(),
-            );
-        } else if delta.0 < 0 || delta.1 < 0 {
-            if self.blank.1 != from.1 || self.blank.0 != dest.0 {
-                paths.push(
-                    (0..(-delta.0))
-                        .map(|_| '<')
-                        .chain((0..(-delta.1)).map(|_| 'v'))
-                        .chain(['A'])
-                        .collect(),
-                );
-            }
-            paths.push(
-                (0..(-delta.1))
-                    .map(|_| 'v')
-                    .chain((0..(-delta.0)).map(|_| '<'))
-                    .chain(['A'])
-                    .collect(),
-            );
         }
 
         paths
