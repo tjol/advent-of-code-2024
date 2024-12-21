@@ -51,7 +51,7 @@ fn get_solution(day: i8) -> Option<(Box<dyn AdventPuzzleSolution>, &'static str)
         18 => solution((day18::day18part1, day18::day18part2), "inputs/day18.txt"),
         19 => solution(CombinedSolution { func: day19::day19 }, "inputs/day19.txt"),
         20 => solution((day20::day20part1, day20::day20part2), "inputs/day20.txt"),
-        21 => solution(day21::day21part1, "inputs/day21.txt"),
+        21 => solution((day21::day21part1, day21::day21part2), "inputs/day21.txt"),
         _ => None,
     }
 }

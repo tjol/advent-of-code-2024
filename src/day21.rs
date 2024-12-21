@@ -1,7 +1,4 @@
-use std::collections::BinaryHeap;
-
 use hashbrown::HashMap;
-use itertools::Itertools;
 
 pub fn day21part1(input: &str) -> usize {
     let mut complexity = 0;
@@ -11,64 +8,104 @@ pub fn day21part1(input: &str) -> usize {
     for code in codes {
         let numeric_part: usize = code[..code.len() - 1].parse().unwrap();
 
-        let seq = find_optimal_sequence(code, 2);
+        let cost = cost_to_enter_code(code, 2);
 
-        complexity += seq.len() * numeric_part;
+        complexity += cost * numeric_part;
     }
 
     complexity
 }
 
-fn find_optimal_sequence(code: &str, n_robots: usize) -> String {
-    let keypads = std::iter::repeat_n(Keypad::directional(), n_robots)
-        .chain([Keypad::numeric()])
-        .collect_vec();
+pub fn day21part2(input: &str) -> usize {
+    let mut complexity = 0;
 
-    let queues = std::iter::repeat_n(String::new(), n_robots + 1)
-        .chain([code.to_string()])
-        .collect_vec();
-    let positions = keypads.iter().map(|kp| kp.starting_pos()).collect_vec();
-    let seed = (vec![0; keypads.len()], queues, positions);
+    let codes = input.trim().lines();
 
-    let mut prio_queue = BinaryHeap::new();
-    prio_queue.push(seed);
+    for code in codes {
+        let numeric_part: usize = code[..code.len() - 1].parse().unwrap();
 
-    'pq: while let Some((costs, mut queues, mut positions)) = prio_queue.pop() {
-        // println!("{}", queues.join("\t"));
-        for i in 0..keypads.len() {
-            let q = &mut queues[i + 1];
-            if !q.is_empty() {
-                let c = q.remove(0);
-                let kp = &keypads[i];
-                let pos = positions[i];
-                let (seqs, new_pos) = kp.get_sequences(pos, c);
-                positions[i] = new_pos;
-                for seq in seqs {
-                    let mut costs2 = costs.clone();
-                    costs2[i] -= seq.len() as i32;
-                    let mut queues2 = queues.clone();
-                    queues2[i].push_str(&seq);
-                    let positions2 = positions.clone();
-                    prio_queue.push((costs2, queues2, positions2));
-                }
-                if prio_queue.len() > 10000 {
-                    panic!("queue too long");
-                }
-                continue 'pq;
-            }
-        }
-        // nothing in any of the queues, i.e. the input has been handled
-        return std::mem::take(&mut queues[0]);
+        let cost = cost_to_enter_code(code, 25);
+
+        complexity += cost * numeric_part;
     }
 
-    panic!()
+    complexity
+}
+
+fn cost_to_enter_code(code: &str, n_robots: usize) -> usize {
+    let robot_stack = RobotStack::new(n_robots);
+    let kp = Keypad::numeric();
+    let mut prev = 'A';
+    let mut cost = 0;
+    for c in code.chars() {
+        cost += robot_stack.cost_to_move_and_press(&kp, prev, c);
+        prev = c;
+    }
+    cost
+}
+
+struct RobotStack {
+    /// (last thing we did, thing we want to do) -> cost of action
+    costs: HashMap<(char, char), usize>,
+}
+
+impl RobotStack {
+    pub fn empty() -> Self {
+        let costs = "><^vA"
+            .chars()
+            .flat_map(|from| "><^vA".chars().map(move |to| ((from, to), 1)))
+            .collect();
+
+        Self { costs }
+    }
+
+    pub fn add_robot(implement: &RobotStack) -> Self {
+        let keypad = Keypad::directional();
+        let mut costs = HashMap::new();
+        for from in "><^vA".chars() {
+            for to in "><^vA".chars() {
+                let cost = implement.cost_to_move_and_press(&keypad, from, to);
+                costs.insert((from, to), cost);
+            }
+        }
+
+        Self { costs }
+    }
+
+    pub fn new(depth: usize) -> Self {
+        let mut stack = RobotStack::empty();
+        for _ in 0..depth {
+            let next_layer = RobotStack::add_robot(&stack);
+            stack = next_layer;
+        }
+        stack
+    }
+
+    // we're hovering at "from" and want to press "sym"
+    pub fn cost_to_move_and_press(&self, kp: &Keypad, from: char, sym: char) -> usize {
+        kp.get_sequences(from, sym)
+            .into_iter()
+            .map(|s| self.cost_of_seq(&s))
+            .min()
+            .unwrap()
+    }
+
+    /// the cost to perform a sequence of actions
+    pub fn cost_of_seq(&self, seq: &str) -> usize {
+        let mut prev = 'A';
+        let mut cost = 0;
+        for c in seq.chars() {
+            cost += self.costs.get(&(prev, c)).unwrap();
+            prev = c;
+        }
+        cost
+    }
 }
 
 #[derive(Debug, Clone)]
 struct Keypad {
-    keys: HashMap<char, (i32, i32)>,
-    starting_pos: (i32, i32),
-    blank: (i32, i32),
+    keys: HashMap<char, (i8, i8)>,
+    blank: (i8, i8),
 }
 
 impl Keypad {
@@ -88,14 +125,9 @@ impl Keypad {
         ]
         .into_iter()
         .collect();
-        let starting_pos = (2, 0);
         let blank = (0, 0);
 
-        Self {
-            keys,
-            starting_pos,
-            blank,
-        }
+        Self { keys, blank }
     }
 
     pub fn directional() -> Self {
@@ -108,21 +140,13 @@ impl Keypad {
         ]
         .into_iter()
         .collect();
-        let starting_pos = (2, 1);
         let blank = (0, 1);
 
-        Self {
-            keys,
-            starting_pos,
-            blank,
-        }
+        Self { keys, blank }
     }
 
-    pub fn starting_pos(&self) -> (i32, i32) {
-        self.starting_pos
-    }
-
-    pub fn get_sequences(&self, from: (i32, i32), key: char) -> (Vec<String>, (i32, i32)) {
+    pub fn get_sequences(&self, from: char, key: char) -> Vec<String> {
+        let from = *self.keys.get(&from).unwrap();
         let dest = *self.keys.get(&key).unwrap();
         let delta = (dest.0 - from.0, dest.1 - from.1);
 
@@ -198,14 +222,15 @@ impl Keypad {
             );
         }
 
-        (paths, dest)
+        paths
     }
 
+    #[allow(unused)]
     pub fn replay(&self, moves: &str) -> Option<String> {
         let keys_by_pos: HashMap<_, _> = self.keys.iter().map(|(&k, &v)| (v, k)).collect();
 
         let mut output = String::new();
-        let mut pos = self.starting_pos;
+        let mut pos = *self.keys.get(&'A').unwrap();
 
         for m in moves.chars() {
             if m == 'A' {
@@ -250,23 +275,50 @@ mod test {
         let numpad = Keypad::numeric();
         let dpad = Keypad::directional();
 
-        let (paths_to_3, _pos_3) = numpad.get_sequences(numpad.starting_pos(), '3');
+        let paths_to_3 = numpad.get_sequences('A', '3');
         assert_eq!(&paths_to_3, &["^A".to_string()]);
-        let (mut paths_to_2, _pos_2) = numpad.get_sequences(numpad.starting_pos(), '2');
+        let mut paths_to_2 = numpad.get_sequences('A', '2');
         paths_to_2.sort();
         assert_eq!(&paths_to_2, &["<^A".to_string(), "^<A".to_string()]);
-        let (paths_to_1, pos_1) = numpad.get_sequences(numpad.starting_pos(), '1');
+        let paths_to_1 = numpad.get_sequences('A', '1');
         assert_eq!(&paths_to_1, &["^<<A".to_string()]);
-        let (mut paths_1_to_9, _pos_9) = numpad.get_sequences(pos_1, '9');
+        let mut paths_1_to_9 = numpad.get_sequences('1', '9');
         paths_1_to_9.sort();
         assert_eq!(&paths_1_to_9, &[">>^^A".to_string(), "^^>>A".to_string()]);
 
-        let (paths_to_left, _pos_left) = dpad.get_sequences(dpad.starting_pos, '<');
+        let paths_to_left = dpad.get_sequences('A', '<');
         assert_eq!(&paths_to_left, &["v<<A".to_string()]);
     }
 
     #[test]
-    fn part_1_examples() {
+    fn robot_stack_test() {
+        let solo = RobotStack::new(1);
+        assert_eq!(solo.cost_of_seq("^"), "<A".len());
+        assert_eq!(solo.cost_of_seq("^^"), "<AA".len());
+        assert_eq!(solo.cost_of_seq("^A"), "<A>A".len());
+        assert_eq!(solo.cost_of_seq("vA"), "<vA>^A".len());
+        assert_eq!(solo.cost_of_seq("<A"), "v<<A>>^A".len());
+
+        let duo = RobotStack::new(2);
+        assert_eq!(duo.cost_of_seq("^"), "v<<A>>^A".len());
+        assert_eq!(duo.cost_of_seq("<A"), "v<A<AA>>^A<A>vAA^A".len());
+    }
+
+    #[test]
+    fn part1_examples_1() {
+        assert_eq!(cost_to_enter_code("029A", 0), "<A^A>^^AvvvA".len());
+        assert_eq!(
+            cost_to_enter_code("029A", 1),
+            "v<<A>>^A<A>AvA<^AA>A<vAAA>^A".len()
+        );
+        assert_eq!(
+            cost_to_enter_code("029A", 2),
+            "<vA<AA>>^AvAA<^A>A<v<A>>^AvA^A<vA>^A<v<A>^A>AAvA^A<v<A>A>^AAAvA<^A>A".len()
+        );
+    }
+
+    #[test]
+    fn part1_examples_2() {
         let examples = [
             (
                 "029A",
@@ -291,8 +343,8 @@ mod test {
         ];
 
         for (code, ref_seq) in examples {
-            let seq = find_optimal_sequence(code, 2);
-            assert_eq!(seq.len(), ref_seq.len());
+            let cost = cost_to_enter_code(code, 2);
+            assert_eq!(cost, ref_seq.len());
         }
     }
 }
