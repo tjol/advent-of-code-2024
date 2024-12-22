@@ -9,3 +9,6 @@ edition = "2021"
 hashbrown = "0.15.2"
 itertools = "0.13.0"
 regex = "1.11.1"
+
+[lints.clippy]
+cast_abs_to_unsigned = "allow"
