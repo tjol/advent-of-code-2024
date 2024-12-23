@@ -24,3 +24,4 @@ Few-word reaction to the different days:
 - Day 20: This was fun! Reused stuff we've needed before, the twist was easy to deal with. Nice.
 - Day 21: Wow, now they're really getting tough.
 - Day 22: This was actually quite nice and relaxing, makes we worried for tomorrow
+- Day 23: Challenging, but doable. Quite pleased with how I did!
