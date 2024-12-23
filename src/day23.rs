@@ -73,8 +73,8 @@ pub fn day23part2(input: &str) -> String {
                 // are all members of the set my neighbours?
                 if sorted_superset(a_neighbours, set) {
                     let mut new_set = set.clone();
-                    new_set.push(*a);
-                    new_set.sort();
+                    let i = new_set.partition_point(|n| n < a);
+                    new_set.insert(i, *a);
                     new_sets.push(new_set);
                 }
             }
@@ -110,7 +110,7 @@ fn sorted_superset<T: Ord>(greater: &[T], lesser: &[T]) -> bool {
 
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 struct ComputerName {
-    name: [u8; 2],
+    name: u16,
 }
 
 impl FromStr for ComputerName {
@@ -122,7 +122,7 @@ impl FromStr for ComputerName {
         } else {
             let bytes = s.as_bytes();
             Ok(Self {
-                name: [bytes[0], bytes[1]],
+                name: (bytes[0] as u16) << 8 | bytes[1] as u16,
             })
         }
     }
@@ -130,13 +130,14 @@ impl FromStr for ComputerName {
 
 impl ComputerName {
     pub fn starts_with(self, c: char) -> bool {
-        self.name[0] as char == c
+        (self.name >> 8) as u8 as char == c
     }
 }
 
 impl Display for ComputerName {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let s = str::from_utf8(&self.name).unwrap();
+        let bytes = [(self.name >> 8) as u8, (self.name & 0xff) as u8];
+        let s = str::from_utf8(&bytes).unwrap();
         Display::fmt(s, f)
     }
 }
