@@ -25,3 +25,4 @@ Few-word reaction to the different days:
 - Day 21: Wow, now they're really getting tough.
 - Day 22: This was actually quite nice and relaxing, makes we worried for tomorrow
 - Day 23: Challenging, but doable. Quite pleased with how I did!
+- Day 24: Well part 2 took all day

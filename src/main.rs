@@ -23,6 +23,7 @@ mod day20;
 mod day21;
 mod day22;
 mod day23;
+mod day24;
 
 fn solution(
     solution: impl AdventPuzzleSolution + 'static,
@@ -56,6 +57,7 @@ fn get_solution(day: i8) -> Option<(Box<dyn AdventPuzzleSolution>, &'static str)
         21 => solution((day21::day21part1, day21::day21part2), "inputs/day21.txt"),
         22 => solution((day22::day22part1, day22::day22part2), "inputs/day22.txt"),
         23 => solution((day23::day23part1, day23::day23part2), "inputs/day23.txt"),
+        24 => solution((day24::day24part1, day24::day24part2), "inputs/day24.txt"),
         _ => None,
     }
 }
